@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3位数组合</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+        body,
+        html {
+            height: 100%;
+            padding: 10px;
+        }
+
+        .hl {
+            color: red;
+        }
+
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cell-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            align-content: flex-start;
+        }
+
+        .cell {
+            border: 1px solid #000;
+            padding: 0 10px;
+            height: 40px;
+            line-height: 40px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app" class="container-fluid">
+        <div class="form-inline">
+            <h5 style="display: inline-block; vertical-align: middle;">规则: </h5>
+            <div v-for="rule in rules" :key="rule.name" class="checkbox" style="margin-left: 5px;">
+                <label>
+                    <input type="checkbox" v-model="rule.checked" style="vertical-align: top; margin-top: 5px;">
+                    <span style="vertical-align: middle;">{{rule.name}}</span>
+                </label>
+            </div>
+            <button class="btn btn-sm" @click.prevent="rules.forEach(r => r.checked = false)">重置</button>
+
+            <br>
+            <h5 style="display: inline-block; vertical-align: middle;">合值: </h5>
+            <div v-for="i in 28" :key="i" class="checkbox" style="margin-left: 5px;">
+                <label>
+                    <input type="checkbox" v-model="sum[i-1]" style="vertical-align: top; margin-top: 5px;">
+                    <span style="vertical-align: middle;">{{i - 1}}</span>
+                </label>
+            </div>
+            <button class="btn btn-sm" @click.prevent="sum.fill(0); sum = [...sum]">重置</button>
+
+        </div>
+
+        <h5>
+            <div class="checkbox-inline" style="margin-left: 5px;">
+                <label>
+                    <input type="checkbox" v-model="reverse" style="vertical-align: top; margin-top: 5px;">
+                    <span style="vertical-align: sub;">取反</span>
+                </label>
+            </div>
+            | 计算总数：{{ total }}
+        </h5>
+
+        <div class="cell-container">
+            <div v-for="num in nums" :key="num.str" v-show="show(num) !== reverse" class="cell">
+                {{ num.str }}
+            </div>
+        </div>
+    </div>
+    <!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+    <script src="js/jquery.min.js"></script>
+    <!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/vue.min.js"></script>
+
+    <script>
+        const xiaoshunArr = ['012', '123', '234', '345', '456', '567', '678', '789',/* '890',*/
+            '210', '321', '432', '543', '654', '765', '876', '987', /*'098'*/
+        ]
+
+        const rules = [
+            {
+                group: '规则',
+                name: '三条',
+                rule(num) {
+                    return num.count === 3
+                },
+            },
+            {
+                group: '规则',
+                name: '三顺',
+                rule(num) {
+                    return xiaoshunArr.includes(num.str)
+                },
+            },
+            {
+                group: '规则',
+                name: '杂三',
+                rule(num) {
+                    return num.count === 1
+                },
+            },
+            {
+                group: '规则',
+                name: '对子',
+                rule(num) {
+                    return num.count === 2
+                },
+            },
+            {
+                group: '规则',
+                name: '全小',
+                rule(num) {
+                    return num.arr.every(n => Number(n) <= 4)
+                },
+            },
+            {
+                group: '规则',
+                name: '全大',
+                rule(num) {
+                    return num.arr.every(n => Number(n) >= 5)
+                },
+            },
+            {
+                group: '规则',
+                name: '全单',
+                rule(num) {
+                    return num.arr.every(n => Number(n) % 2 === 1)
+                },
+            },
+            {
+                group: '规则',
+                name: '全双',
+                rule(num) {
+                    return num.arr.every(n => Number(n) % 2 === 0)
+                },
+            },
+        ]
+
+        Object.freeze(rules)
+
+        let nums = []
+        for (let i = 0; i < 1000; ++i) {
+            let num = {
+                num: i,
+                str: i.toString().padStart(3, '0'),
+                arr: [...i.toString().padStart(3, '0')],
+                sum: (n => {
+                    let s = 0
+                    while (n != 0) {
+                        s += Number.parseInt(n % 10)
+                        n /= 10
+                        n = Number.parseInt(n)
+                    }
+                    return s
+                })(i),
+            }
+            num.count = (str => {
+                let c = {}
+                for (let cc of str) {
+                    if (c[cc] === undefined) {
+                        c[cc] = 0
+                    }
+                    c[cc]++
+                }
+                return Math.max(...Object.values(c))
+            })(num.str)
+            num.rules = (num => {
+                let obj = {}
+                for (let rule of rules) {
+                    obj[rule.name] = rule.rule(num)
+                }
+                return obj
+            })(num)
+
+            nums.push(num)
+        }
+        console.log(nums)
+        Object.freeze(nums)
+
+        new Vue({
+            el: '#app',
+            data: {
+                reverse: false,
+                rules: rules.map(v => ({
+                    name: v.name,
+                    checked: false,
+                })),
+                sum: (s => {
+                    let a = []
+                    for (let i = 0; i <= s; ++i) {
+                        a.push(0)
+                    }
+                    return a
+                })(27),
+                nums,
+            },
+            computed: {
+                total() {
+                    let n = 0
+                    for (let num of this.nums) {
+                        if (this.show(num) !== this.reverse) {
+                            n++
+                        }
+                    }
+                    return n
+                },
+            },
+            methods: {
+                show(num) {
+                    if (this.sum.filter(v => v).length > 0) {
+                        let sum = num.arr.map(v => Number(v)).reduce((a, b) => a + b, 0)
+                        if (!this.sum[sum]) return false
+                    }
+
+                    for (let rule of this.rules) {
+                        if (rule.checked) {
+                            if (!num.rules[rule.name]) {
+                                return false
+                            }
+                        }
+                    }
+                    return true
+                },
+            },
+        })
+    </script>
+
+</body>
+
+</html>
