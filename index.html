@@ -93,7 +93,8 @@
     <script src="js/vue.min.js"></script>
 
     <script>
-        const xiaoshunArr = ['012', '123', '234', '345', '456', '567', '678', '789',/* '890',*/
+        const xiaoshunArr = [
+            '012', '123', '234', '345', '456', '567', '678', '789',/* '890',*/
             '210', '321', '432', '543', '654', '765', '876', '987', /*'098'*/
         ]
 
@@ -109,7 +110,7 @@
                 group: '规则',
                 name: '三顺',
                 rule(num) {
-                    return xiaoshunArr.includes(num.str)
+                    return xiaoshunArr.includes([...num.str].sort().join(''))
                 },
             },
             {
